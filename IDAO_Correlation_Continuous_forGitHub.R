@@ -1,12 +1,19 @@
 ## Correlations between continuous time series
+# This is an analysis to examine the relationship between sleep and activity from a Fitbit
 
 # Automation of continuous correlation analysis
 # Takes two files from Fitbit Dashboard: "Activity.csv" and "Sleep.csv"
-# Input the output file location as outFileLocation
+# Input the output file location as outFileLocation, or defaults to current working directory
 
-auto.continuous.correl <- function(activityData, sleepData, outFileLocation) {
+auto.continuous.correl <- function(activityData, sleepData, outFileLocation = getwd()) {
 
-# This is an analysis to examine the relationship between sleep and activity from a Fitbit
+
+# Error handling: No files selected
+e <- simpleError("No File Selected")
+tryCatch(activityDataForRead <- activityData, stop(e))
+tryCatch(sleepDataForRead <- sleepData, stop(e))
+
+fileNameRoot <- outFileLocation
 
 # First load the requisite packages
 rm(list=ls()) # Clear memory
@@ -16,11 +23,10 @@ library(astsa) # To run acf
 
 
 ############################################################
-# Load data from your fitbit dashboard
-fitbit_activity <- read.csv(activityData, as.is = TRUE, header = TRUE)
-fitbit_sleep <- read.csv(sleepData, as.is = TRUE, header = TRUE)
+# Error handling: Unable to read file data or wrong file data
+fitbit_activity <- read.csv(activityDataForRead, as.is = TRUE, header = TRUE)
+fitbit_sleep <- read.csv(sleepDataForRead, as.is = TRUE, header = TRUE)
 fitbit <- merge(fitbit_sleep, fitbit_activity, by="Date")
-
 
 # Remove technical outliers where not wearing (either make = mean or zero)
 # Create indicator based on time
@@ -40,8 +46,6 @@ data <- as.data.frame(cbind(fitbit$Minutes.Asleep, fitbit$Steps, fitbit$Minutes.
 colnames(data) <- c("Sleep", "Steps", "Very Active")
 
 # Create graph of time series
-fileNameRoot <- outFileLocation
-
 fileName1 = paste0(fileNameRoot, "/ThreeTSPlot.jpeg")
 jpeg(filename=fileName1, width = 800, height = 600, quality=90)
 plot.ts(data, main="Plot of all three time series") # TS plots of three variables
