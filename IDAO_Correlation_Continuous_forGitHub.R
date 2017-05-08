@@ -5,28 +5,108 @@
 # Takes two files from Fitbit Dashboard: "Activity.csv" and "Sleep.csv"
 # Input the output file location as outFileLocation, or defaults to current working directory
 
-auto.continuous.correl <- function(activityData, sleepData, outFileLocation = getwd()) {
+auto.continuous.correl <- function(activityData, sleepData, fileNameRoot = getwd()) {
 
-
-# Error handling: No files selected
-e <- simpleError("No File Selected")
-tryCatch(activityDataForRead <- activityData, stop(e))
-tryCatch(sleepDataForRead <- sleepData, stop(e))
-
-fileNameRoot <- outFileLocation
-
-# First load the requisite packages
+# Clear memory and graphics
 rm(list=ls()) # Clear memory
 graphics.off() # Clears graphics
-library(forecast) # Needed to run forecast and auto.arima functions
-library(astsa) # To run acf
+
+# Error handling: Unable to read file data or wrong file data
+tryCatch(
+  { # Attempt to read file entered
+    fitbit_activity <- read.csv(activityData, as.is = TRUE, header = TRUE)
+    print("Successfully loaded Activity data")
+  }, 
+  warning = function(w) 
+    {
+    print() # Dummy variable to suppress output of warning
+  },
+  error = function(err)
+  {
+    stop("Unable to read Activity data file")
+  })
+
+tryCatch(
+  { # Attempt to read file entered
+    fitbit_sleep <- read.csv(sleepData, as.is = TRUE, header = TRUE)
+    print("Successfully loaded Sleep data")
+  }, 
+  warning = function(w) 
+  {
+    print() # Dummy variable to suppress output of warning
+  },
+  error = function(err)
+  {
+    stop("Unable to read sleep data file")
+  })
+  
+tryCatch(
+  { # Attempt to merge files into one main file
+    fitbit <- merge(fitbit_sleep, fitbit_activity, by="Date")
+    print("Successfully merged files")
+  },
+  warning = function(w)
+  {
+    print()
+  },
+  error = function(err)
+  {stop("Unable to merge files")
+  })
+
+# Load requisite packages
+tryCatch(
+  {
+    library(forecast) # Needed to run forecast and auto.arima functions
+    print("Successfully loaded forecast package")
+  },
+  warning = function(w)
+  {
+    print()
+  }, 
+  error = function(err)
+  { 
+    print("Forecast package not installed, attempting to install from internet")
+    tryCatch(
+      {
+        install.packages("forecast")
+      },
+      warning = function(w)
+      {print()
+      },
+      error = function(err)
+      {stop("Unable to install forecast package from internet")
+      })
+  })
+
+tryCatch(
+  {
+    library(astsa) # To run acf
+    print("Successfully loaded astsa package")
+  },
+  warning = function(w)
+  {
+    print()
+  }, 
+  error = function(err)
+  { 
+    print("Astsa package not installed, attempting to install from internet")
+    tryCatch(
+      {
+        install.packages("astsa")
+      },
+      warning = function(w)
+      {print()
+      },
+      error = function(err)
+      {stop("Unable to install astsa package from internet")
+      })
+  })
+
 
 
 ############################################################
-# Error handling: Unable to read file data or wrong file data
-fitbit_activity <- read.csv(activityDataForRead, as.is = TRUE, header = TRUE)
-fitbit_sleep <- read.csv(sleepDataForRead, as.is = TRUE, header = TRUE)
-fitbit <- merge(fitbit_sleep, fitbit_activity, by="Date")
+
+
 
 # Remove technical outliers where not wearing (either make = mean or zero)
 # Create indicator based on time
