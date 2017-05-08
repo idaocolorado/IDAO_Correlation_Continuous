@@ -1,5 +1,11 @@
 ## Correlations between continuous time series
 
+# Automation of continuous correlation analysis
+# Takes two files from Fitbit Dashboard: "Activity.csv" and "Sleep.csv"
+# Input the output file location as outFileLocation
+
+auto.continuous.correl <- function(activityData, sleepData, outFileLocation) {
+
 # This is an analysis to examine the relationship between sleep and activity from a Fitbit
 
 # First load the requisite packages
@@ -8,15 +14,13 @@ graphics.off() # Clears graphics
 library(forecast) # Needed to run forecast and auto.arima functions
 library(astsa) # To run acf
 
+
 ############################################################
 # Load data from your fitbit dashboard
-fitbit_activity <- read.csv("Activity.csv", as.is = TRUE, header = TRUE)
-fitbit_sleep <- read.csv("Sleep.csv", as.is = TRUE, header = TRUE)
+fitbit_activity <- read.csv(activityData, as.is = TRUE, header = TRUE)
+fitbit_sleep <- read.csv(sleepData, as.is = TRUE, header = TRUE)
 fitbit <- merge(fitbit_sleep, fitbit_activity, by="Date")
 
-# Or if you're using the file on Github
-fitbit <- read.csv("Mike_Fitbit_data.csv", as.is = TRUE, header = TRUE)
-fitbit$Date <- as.Date(full_data$Date)
 
 # Remove technical outliers where not wearing (either make = mean or zero)
 # Create indicator based on time
@@ -36,7 +40,9 @@ data <- as.data.frame(cbind(fitbit$Minutes.Asleep, fitbit$Steps, fitbit$Minutes.
 colnames(data) <- c("Sleep", "Steps", "Very Active")
 
 # Create graph of time series
-fileName1 = "/MyFileLocation/ThreeTSPlot.jpeg"
+fileNameRoot <- outFileLocation
+
+fileName1 = paste0(fileNameRoot, "/ThreeTSPlot.jpeg")
 jpeg(filename=fileName1, width = 800, height = 600, quality=90)
 plot.ts(data, main="Plot of all three time series") # TS plots of three variables
 dev.off()
@@ -68,7 +74,7 @@ getStats(model5)
 
 
 ## Cross correlation graph
-fileName2 = "/MyFileLocation/ccfPlot.jpeg"
+fileName2 = paste0(fileNameRoot, "/ccfPlot.jpeg")
 jpeg(filename=fileName2, width = 800, height = 600, quality=90)
 par(mfrow=c(3,1))
 ccf(Steps, Minutes.Asleep, 7)
@@ -85,7 +91,7 @@ data1 <- ts.intersect(SleepTS, Steps1)
 (model6 <- lm(SleepTS~Steps1, data = data1))
 summary(model6)
 
-fileName3 = "/MyFileLocation/lag2Plot.jpeg"
+fileName3 = paste0(fileNameRoot, "/lag2Plot.jpeg")
 jpeg(filename=fileName3, width = 800, height = 600, quality=90)
 lag2.plot(Steps, Minutes.Asleep, 3)
 dev.off()
@@ -108,7 +114,7 @@ predictedFit <- predict(model7, data.frame(StepsMan = priorSteps, StepsMansq = p
                           level = 0.95)
 
 par(mfrow=c(1,1))
-fileName4 = "/MyFileLocation/predictedSleep.jpeg"
+fileName4 = paste0(fileNameRoot, "/predictedSleep.jpeg")
 jpeg(filename=fileName4, width = 800, height = 600, quality=90)
 plot(priorSteps, predictedFit$fit[,1], type="l", 
      main = "Amount of Sleep Expected after Daily Steps",
@@ -123,7 +129,7 @@ dev.off()
 # Find Seasonality
 # Frequency plot
 
-fileName5 = "/MyFileLocation/frequencySearch.jpeg"
+fileName5 = paste0(fileNameRoot, "/frequencySearch.jpeg")
 jpeg(filename=fileName5, width = 800, height = 600, quality=90)
 x = diff(Minutes.Asleep)
 FF = abs(fft(x)/sqrt(length(x)))^2  # Need to square and normalize raw fft output
@@ -179,7 +185,7 @@ model.fore.20k <- c(rep("NA", length(auto.fore.20k$x)), auto.fore.20k$mean)
 
 
 #Graph
-fileName6 = "/MyFileLocation/forecastSleep.jpeg"
+fileName6 = paste0(fileNameRoot, "/forecastSleep.jpeg")
 jpeg(filename=fileName6, width = 800, height = 600, quality=90)
 plot(Date.fore, model.fore.mean, type="l", main="Predicted Minutes of Sleep after Steps Day Before", 
      xlab="Date", 
@@ -216,5 +222,6 @@ text(max(Date.fore), 550,  #Location
 )
 dev.off()
 
+}
 
 
