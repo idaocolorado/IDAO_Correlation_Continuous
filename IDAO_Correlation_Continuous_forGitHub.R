@@ -1,15 +1,30 @@
+#!/usr/bin/env Rscript
+
 ## Correlations between continuous time series
 # This is an analysis to examine the relationship between sleep and activity from a Fitbit
 
-# Automation of continuous correlation analysis
+# Automation of continuous correlation analysis to run from command line
 # Takes two files from Fitbit Dashboard: "Activity.csv" and "Sleep.csv"
 # Input the output file location as outFileLocation, or defaults to current working directory
-
-auto.continuous.correl <- function(activityData, sleepData, fileNameRoot = getwd()) {
-
 # Clear memory and graphics
+
 rm(list=ls()) # Clear memory
 graphics.off() # Clears graphics
+
+# Allow arguments to be entered after 
+args = commandArgs(trailingOnly=TRUE)
+
+# test if there are at least 2 arguments: if not, return an error
+if (length(args)<2) {
+  stop("Need to supply file names", call.=FALSE)
+} else if (length(args)==2) {
+  # default output file
+  args[3] = getwd()
+}
+
+# Assign to variables
+activityData <- args[1]
+sleepData <- args[2]
 
 # Error handling: Unable to read file data or wrong file data
 tryCatch(
@@ -102,11 +117,7 @@ tryCatch(
       })
   })
 
-
-
 ############################################################
-
-
 
 # Remove technical outliers where not wearing (either make = mean or zero)
 # Create indicator based on time
@@ -306,6 +317,6 @@ text(max(Date.fore), 550,  #Location
 )
 dev.off()
 
-}
+
 
 
