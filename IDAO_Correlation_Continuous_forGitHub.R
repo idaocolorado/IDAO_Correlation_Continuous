@@ -16,7 +16,7 @@ fitbit <- merge(fitbit_sleep, fitbit_activity, by="Date")
 
 # Or if you're using the file on Github
 fitbit <- read.csv("Mike_Fitbit_data.csv", as.is = TRUE, header = TRUE)
-fitbit$Date <- as.Date(full_data$Date)
+fitbit$Date <- as.Date(fitbit$Date)
 
 # Remove technical outliers where not wearing (either make = mean or zero)
 # Create indicator based on time
